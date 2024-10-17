@@ -132,57 +132,69 @@ void main() {
 
 `
 
-// Task 1: ChatGPT'nin verdiği dönüşüm matrisini kullanıyoruz
+/**
+ * 
+ * @TASK1 Calculate the model view matrix by using the chatGPT
+ */
+
 function getChatGPTModelViewMatrix() {
     const transformationMatrix = new Float32Array([
-        0.17677669, -0.3061862, 0.35355338, 0.3, 
-        0.3061862, 0.42677668, -0.17677669, -0.25, 
-        -0.35355338, 0.17677669, 0.42677668, 0.0, 
+        0.17677669, -0.3061862, 0.35355338, 0.3,
+        0.3061862, 0.42677668, -0.17677669, -0.25,
+        -0.35355338, 0.17677669, 0.42677668, 0.0,
         0.0, 0.0, 0.0, 1.0
     ]);
+
+    return getTransposeMatrix(transformationMatrix);
 }
-// Task 2: Manuel olarak hesapladığımız dönüşüm matrisini burada tanımlıyoruz
+
+
+/**
+ * 
+ * @TASK2 
+ */
 function getModelViewMatrix() {
-    const transformationMatrix = new Float32Array([
-        0.17677669, -0.3061862, 0.35355338, 0.3, 
-        0.3061862, 0.42677668, -0.17677669, -0.25, 
-        -0.35355338, 0.17677669, 0.42677668, 0.0, 
-        0.0, 0.0, 0.0, 1.0
-    ]);
-}
-
-// Task 3: Animasyonlu matris hareketi
-function getPeriodicMovement(startTime) {
-    const identityMatrix = [
-        1, 0, 0, 0,  
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    ];
-
-    const transformationMatrix = [
-        0.17677669, -0.3061862, 0.35355338, 0.3, 
-        0.3061862, 0.42677668, -0.17677669, -0.25, 
-        -0.35355338, 0.17677669, 0.42677668, 0.0, 
-        0.0, 0.0, 0.0, 1.0
-    ];
-
-    const period = 10000;  
-    const halfPeriod = period / 2;
+  
+    const scalingMatrix = createScaleMatrix(0.5, 0.5, 1);
 
     
-    const currentTime = Date.now();
-    const time = (currentTime - startTime) % period;
+    const rotationXMatrix = createRotationMatrix_X(Math.PI / 6); 
+    const rotationYMatrix = createRotationMatrix_Y(Math.PI / 4); 
+    const rotationZMatrix = createRotationMatrix_Z(Math.PI / 3); 
 
-   
-    let t = time < halfPeriod ? time / halfPeriod : 1 - (time - halfPeriod) / halfPeriod;
 
-    const resultMatrix = [];
-    for (let i = 0; i < 16; i++) {
-        resultMatrix[i] = identityMatrix[i] * (1 - t) + transformationMatrix[i] * t;
-    }
+    const translationMatrix = createTranslationMatrix(0.3, -0.25, 0);
 
-    return new Float32Array(resultMatrix);
+    
+    const scaleRotateMatrix = multiplyMatrices(rotationZMatrix, multiplyMatrices(rotationYMatrix, multiplyMatrices(rotationXMatrix, scalingMatrix)));
+    const modelViewMatrix = multiplyMatrices(translationMatrix, scaleRotateMatrix);
+
+    return modelViewMatrix; // Return the final matrix
 }
 
+
+/**
+ * 
+ * @TASK3 
+ */
+function getPeriodicMovement(startTime) {
+    const elapsedTime = (Date.now() - startTime) / 1000; 
+    const period = 10; 
+    const time = elapsedTime % period; 
+
+    
+    let t = (time < 5) ? time / 5 : (10 - time) / 5;
+
+    
+    const identityMatrix = createIdentityMatrix();
+    const targetMatrix = getModelViewMatrix();
+
+    
+    const interpolatedMatrix = new Float32Array(16);
+    for (let i = 0; i < 16; i++) {
+        interpolatedMatrix[i] = identityMatrix[i] * (1 - t) + targetMatrix[i] * t;
+    }
+
+    return interpolatedMatrix;
+}
 
